@@ -4,6 +4,7 @@ const md5 = require('blueimp-md5')
 
 const User = require('../models/user')
 const Tag = require('../models/tag')
+const Blog = require('../models/blog')
 
 //登录接口
 router.post('/login', function(req, res) {
@@ -77,10 +78,6 @@ router.post('/addTag',function(req,res){
 
 // 获取标签接口
 router.get('/getTag',function(req,res){
-  const _id = req.cookies._id
-  if(!_id){
-    return res.send({code: 1,msg: '请先登录'})
-  }
   Tag.find(function(err, tags){
     if(err){
       return res.send({code: 500,msg: '服务器错误'})
@@ -117,17 +114,17 @@ router.post('/updateTag',function(req,res){
   const name = req.body.name
   Tag.findOne({name},(err,data)=>{
     if(err){
-      res.send({code: 500,msg: '服务器错误'})
+      return res.send({code: 500,msg: '服务器错误'})
     }
     if(data){
       res.send({code: 3,msg: '标签已存在'})
     }else{
       Tag.findByIdAndUpdate(tagId,{name},function(err,data){
         if(err){
-          res.send({code: 500,msg: '服务器错误'})
+          return res.send({code: 500,msg: '服务器错误'})
         }
         if(!data){
-          res.send({code: 2,msg: '标签不存在'})
+          return res.send({code: 2,msg: '标签不存在'})
         }
         res.send({code: 0,msg: '更新成功'})
       })
@@ -137,17 +134,56 @@ router.post('/updateTag',function(req,res){
 
 //搜索标签接口
 router.get('/searchTag',function(req,res){
+  const {searchText} = req.query
+  Tag.find({name: eval(`/${searchText}/i`)},function(err,tags){
+    if(err){
+      return res.send({code: 500,msg: '服务器错误'})
+    }
+    res.send({code: 0,data: tags})
+  })
+})
+
+//添加博客接口
+router.post('/addBlog',function(req,res){
   const _id = req.cookies._id
   if(!_id){
     return res.send({code: 1,msg: '请先登录'})
   }
-  const {searchText} = req.query
-  Tag.find({name: eval(`/${searchText}/i`)},function(err,tags){
+  new Blog(req.body).save(function(err,blog){
     if(err){
-      res.send({code: 500,msg: '服务器错误'})
+      return res.send({code: 500,msg: '服务器错误'})
     }
-    res.send({code: 0,data: tags})
+    res.send({code: 0,data: blog})
   })
+})
+
+//获取博客列表接口
+router.get('/getBlog',function(req,res){
+  Blog.find(function(err,blogs){
+    if(err){
+      return res.send({code: 500,msg: '服务器错误'})
+    }
+    res.send({code: 0,data: blogs})
+  })
+})
+
+//设置博客置顶
+router.post('/setBlogTop',function(req,res){
+  const _id = req.cookies._id
+  if(!_id){
+    return res.send({code: 1,msg: '请先登录'})
+  }
+  const {blogId,isTop} = req.body
+  Blog.findByIdAndUpdate(blogId,{isTop},function(err,blog){
+    if(err){
+      return res.send({code: 500,msg: '服务器错误'})
+    }
+    if(!blog){
+      return res.send({code: 2,msg: '博客不存在'})
+    }
+    res.send({code: 0,data: '置顶成功'})
+  })
+
 })
 
 module.exports = router
