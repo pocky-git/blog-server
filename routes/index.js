@@ -102,6 +102,19 @@ router.post('/deleteTag',function(req,res){
     }
     res.send({code: 0,msg: '删除成功'})
   })
+  Blog.find(function(err,blogs){
+    blogs.forEach(blog=>{
+      const {tags} = blog
+      if(tags.indexOf(tagId)!==-1 && tags.length!==1){
+        tags.splice(tags.findIndex(tag=>tag===tagId),1)
+        new Blog(blog).save()
+      }else if(tags.indexOf(tagId)!==-1 && tags.length===1){
+        Blog.findByIdAndDelete(blog._id,function(err,data){
+          
+        })
+      }
+    })
+  })
 })
 
 //更新标签接口
@@ -184,6 +197,54 @@ router.post('/setBlogTop',function(req,res){
     res.send({code: 0,data: '置顶成功'})
   })
 
+})
+
+//删除博客
+router.post('/deleteBlog',function(req,res){
+  const _id = req.cookies._id
+  if(!_id){
+    return res.send({code: 1,msg: '请先登录'})
+  }
+  const {blogId} = req.body
+  Blog.findByIdAndDelete(blogId,function(err,data){
+    if(err){
+      return res.send({code: 500,msg: '服务器错误'})
+    }
+    if(!data){
+      return res.send({code: 2,msg: '博客不存在'})
+    }
+    res.send({code: 0,msg: '删除成功'})
+  })
+})
+
+//搜索博客接口
+router.get('/searchBlog',function(req,res){
+  const {searchText} = req.query
+  Blog.find({title: eval(`/${searchText}/i`)},function(err,blogs){
+    if(err){
+      return res.send({code: 500,msg: '服务器错误'})
+    }
+    res.send({code: 0,data: blogs})
+  })
+})
+
+//更新博客接口
+router.post('/updateBlog',function(req,res){
+  const _id = req.cookies._id
+  if(!_id){
+    return res.send({code: 1,msg: '请先登录'})
+  }
+  const blogId = req.body._id
+  Blog.findByIdAndUpdate(blogId,req.body,function(err,blog){
+    console.log(req.body)
+    if(err){
+      return res.send({code: 500,msg: '服务器错误'})
+    }
+    if(!blog){
+      return res.send({code: 2,msg: '博客不存在'})
+    }
+    res.send({code: 0,msg: '更新成功'})
+  })
 })
 
 module.exports = router
