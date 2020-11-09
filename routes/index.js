@@ -172,12 +172,22 @@ router.post('/addBlog',function(req,res){
 
 //获取博客列表接口
 router.get('/getBlog',function(req,res){
-  Blog.find(function(err,blogs){
-    if(err){
-      return res.send({code: 500,msg: '服务器错误'})
-    }
-    res.send({code: 0,data: blogs})
-  })
+  const {tagId} = req.query
+  if(!tagId){
+    Blog.find(function(err,blogs){
+      if(err){
+        return res.send({code: 500,msg: '服务器错误'})
+      }
+      res.send({code: 0,data: blogs})
+    })
+  }else{
+    Blog.find(function(err,blogs){
+      if(err){
+        return res.send({code: 500,msg: '服务器错误'})
+      }
+      res.send({code: 0,data: blogs.filter(blog=>blog.tags.indexOf(tagId)!==-1)})
+    })
+  }
 })
 
 //设置博客置顶
@@ -236,7 +246,6 @@ router.post('/updateBlog',function(req,res){
   }
   const blogId = req.body._id
   Blog.findByIdAndUpdate(blogId,req.body,function(err,blog){
-    console.log(req.body)
     if(err){
       return res.send({code: 500,msg: '服务器错误'})
     }
@@ -244,6 +253,20 @@ router.post('/updateBlog',function(req,res){
       return res.send({code: 2,msg: '博客不存在'})
     }
     res.send({code: 0,msg: '更新成功'})
+  })
+})
+
+//获取文章详情
+router.get('/getBlogDetail',function(req,res){
+  const id = req.query.id
+  Blog.findById(id,function(err,detail){
+    if(err){
+      return res.send({code: 500,msg: '服务器错误'})
+    }
+    if(!detail){
+      return res.send({code: 2,msg: '博客不存在'})
+    }
+    res.send({code: 0,data: detail})
   })
 })
 
