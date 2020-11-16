@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const md5 = require('blueimp-md5')
+const multer = require('multer')
 
 const User = require('../models/user')
 const Tag = require('../models/tag')
@@ -269,5 +270,34 @@ router.get('/getBlogDetail',function(req,res){
     res.send({code: 0,data: detail})
   })
 })
+
+//上传头像接口
+const storage = multer.diskStorage({
+  destination: function(req,file,cb){
+    cb(null,'public/images')
+  },
+  filename: function(req,file,cb){
+    let exts = file.originalname.split('.')
+    let ext = exts[exts.length - 1]
+
+    let tmpname = (new Date()).getTime() + parseInt(Math.random() * 9999)
+    cb(null, `${tmpname}.${ext}`)
+  }
+})
+
+const upload = multer({
+  storage
+})
+
+router.post('/upload',upload.single('avantar'),function(req,res){
+  let imgUrl = `/images/${req.file.filename}`
+  res.send({
+    code: 0,
+    data: imgUrl
+  })
+})
+
+//更新关于我们接口
+
 
 module.exports = router
