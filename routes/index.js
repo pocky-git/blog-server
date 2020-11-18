@@ -46,8 +46,8 @@ router.get('/user', function (req, res) {
       __v: 0
     },
     (err, user) => {
-      if (err) {
-        return res.send({ code: 500, msg: '服务器错误' })
+      if (!user) {
+        return res.send({ code: 1, msg: '请先登录' })
       }
       res.cookie('_id', user._id, { maxAge: 1000 * 60 * 60 * 24 })
       res.send({ code: 0, data: user })

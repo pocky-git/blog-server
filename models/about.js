@@ -17,6 +17,10 @@ const aboutSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    content: {
+        type: String,
+        required: true
+    }
 })
 
 const About = mongoose.model('about',aboutSchema)
